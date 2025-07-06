@@ -35,8 +35,11 @@ def delete_ticket(ticket_id):
 
 
 def get_ticket_field(ticket_id, field):
-    if not ticket_exists(ticket_id):
-        return f"The ticket #{ticket_id} does not exist"
-    res = requests.get(f"{BASE_URL}/ticket/{ticket_id}")
-    ticket = res.json()
-    return {field: ticket.get(field, "Champ introuvable")}
+    try:
+        res = requests.get(f"{BASE_URL}/ticket/{ticket_id}")
+        if res.status_code == 404:
+            return {"error": f"The ticket #{ticket_id} does not exist"}
+        ticket = res.json()
+        return {field: ticket.get(field, "Champ introuvable")}
+    except Exception as e:
+        return {"error": f"Error fetching ticket: {str(e)}"}

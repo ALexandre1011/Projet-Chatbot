@@ -18,6 +18,7 @@ def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
     ticket = db.query(customer_ticket).filter(customer_ticket.ticket_id == ticket_id).first()
     if not ticket or ticket.is_deleted:
         raise HTTPException(status_code=404, detail=f"Ticket #{ticket_id} does not exist")
+    ticket.ticket_description = replace_placeholders(ticket.ticket_description, ticket)
     return ticket
 
 @app.post("/ticket")
@@ -44,3 +45,11 @@ def delete_ticket(ticket_id: int, db: Session = Depends(get_db)):
     ticket.is_deleted = True
     db.commit()
     return {"message": f"The ticket #{ticket_id} has been deleted"}
+
+def replace_placeholders(description: str, ticket: customer_ticket) -> str:
+    placeholders = {
+        "{product_purchased}": ticket.product_purchased
+    }
+    for placeholder, value in placeholders.items():
+        description = description.replace(placeholder, str(value))
+    return description
